@@ -1,10 +1,10 @@
 package domain
 
 type Review struct {
-	Id        int64  `json:"id" validate:"required"`
-	ServiceId int64  `json:"service_id" validate:"required"`
-	Score     int64  `json:"score" validate:"required"`
-	Comment   string `json:"comment" validate:"required"`
+	ID        int64  `json:"ID" `
+	ServiceID int64  `json:"service_ID" `
+	Score     int64  `json:"score" `
+	Comment   string `json:"comment" `
 }
 
 type ReviewList []Review

@@ -3,19 +3,20 @@ package domain
 import "time"
 
 type Service struct {
-	Id          int    `json:"id" validate:"required"`
-	TrainerId   int    `json:"trainer_id" validate:"required"`
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	Location    string `json:"location" validate:"required"`
+	ID          int    `json:"id" `
+	TrainerID   int    `json:"trainer_id" `
+	Name        string `json:"name" `
+	PriceID     int    `json:"price_id" `
+	Description string `json:"description" `
+	Location    string `json:"location" `
 }
 
 type ServiceList []Service
 
 type ServicePrice struct {
-	Id       int       `json:"id" validate:"required"`
-	CreateAd time.Time `json:"create_at" validate:"required"`
-	Price    float64   `json:"proce" validate:"required"`
+	ID       int       `json:"id" `
+	CreateAd time.Time `json:"create_at" `
+	Price    float64   `json:"proce" `
 }
 
 type ServicePriceList []ServicePrice

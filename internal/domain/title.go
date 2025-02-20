@@ -1,9 +1,9 @@
 package domain
 
 type Title struct {
-	Id        int64  `json:"id" validate:"required"`
-	TrainerId int64  `json:"trainer_id" validate:"required"`
-	Title     string `json:"title" validate:"required"`
+	ID        int64  `json:"ID" `
+	TrainerID int64  `json:"trainer_id" `
+	Value     string `json:"value" `
 }
 
 type TitleList []Title

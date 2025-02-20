@@ -1,12 +1,12 @@
 package domain
 
 type Trainer struct {
-	Id          int64  `json:"id" validate:"required"`
-	LastName    string `json:"last_name" validate:"required"`
-	FirstName   string `json:"first_name" validate:"required"`
-	MiddleName  string `json:"middle_name" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	IsActive    bool   `json:"is_active" validate:"required"`
+	ID          int64  `json:"id" `
+	LastName    string `json:"last_name" `
+	FirstName   string `json:"first_name" `
+	MiddleName  string `json:"middle_name" `
+	Description string `json:"description" `
+	IsActive    bool   `json:"is_active" `
 }
 
 type TrainerList []Trainer

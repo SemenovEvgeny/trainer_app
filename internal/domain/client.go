@@ -3,22 +3,23 @@ package domain
 import "time"
 
 type Client struct {
-	Id          int64  `json:"id" validate:"required"`
-	LastName    string `json:"last_name" validate:"required"`
-	FirstName   string `json:"first_name" validate:"required"`
-	MiddleName  string `json:"middle_name" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	IsActive    bool   `json:"is_active" validate:"required"`
+	ID          int64  `json:"ID" `
+	LastName    string `json:"last_name" `
+	FirstName   string `json:"first_name" `
+	MiddleName  string `json:"middle_name" `
+	Description string `json:"description" `
+	IsActive    bool   `json:"is_active" `
 }
 
 type ClientList []Client
 
 type ClientService struct {
-	Id        int64     `json:"id" validate:"required"`
-	ClientId  int64     `json:"client_id" validate:"required"`
-	ServiceId int64     `json:"service_id" validate:"required"`
-	Date      time.Time `json:"date" validate:"required"`
-	IsActive  bool      `json:"is_active" validate:"required"`
+	ID        int64     `json:"id" `
+	ClientID  int64     `json:"client_id" `
+	ServiceID int64     `json:"service_id" `
+	PriceID   int64     `json:"price_id" `
+	Date      time.Time `json:"date" `
+	IsActive  bool      `json:"is_active" `
 }
 
-type ClientsServiceList []ClientService
+type ClientServiceList []ClientService
