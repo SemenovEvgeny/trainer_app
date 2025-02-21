@@ -13,7 +13,7 @@ const (
 	envProd  = "prod"
 )
 
-func NewLogger(env string) *zap.Logger {
+func NewLogger(env string) (*zap.Logger, error) {
 
 	var logger *zap.Logger
 	var err error
@@ -39,5 +39,5 @@ func NewLogger(env string) *zap.Logger {
 		os.Exit(1)
 	}
 
-	return logger
+	return logger, nil
 }

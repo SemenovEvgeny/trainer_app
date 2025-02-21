@@ -27,6 +27,7 @@ type Storage struct {
 
 type HTTPServer struct {
 	Address     string        `yaml:"address"`
+	Port        int           `yaml:"port"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 	User        string        `yaml:"user" env-required:"true"`
