@@ -2,9 +2,9 @@
 -- +goose StatementBegin
 CREATE TABLE achievement
 (
-    id          SERIAL PRIMARY KEY,
-    trainer_id  INT  NOT NULL,
-    achievement TEXT NOT NULL,
+    id         SERIAL PRIMARY KEY,
+    trainer_id INT  NOT NULL,
+    value      TEXT NOT NULL,
     FOREIGN KEY (trainer_id) REFERENCES trainer (id)
 );
 -- +goose StatementEnd
