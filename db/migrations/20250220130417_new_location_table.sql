@@ -2,16 +2,13 @@
 -- +goose StatementBegin
 CREATE TABLE location
 (
-    id          SERIAL PRIMARY KEY,
-    region_id   INT NOT NULL,
-    city_id     INT NOT NULL,
-    district_id INT NOT NULL,
-    street_id   INT NOT NULL,
-    text        VARCHAR(255),
-    FOREIGN KEY (region_id) REFERENCES region (id),
-    FOREIGN KEY (city_id) REFERENCES city (id),
-    FOREIGN KEY (district_id) REFERENCES district (id),
-    FOREIGN KEY (street_id) REFERENCES street (id)
+    id       SERIAL PRIMARY KEY,
+    region   VARCHAR(255) NOT NULL,
+    city     VARCHAR(255) NOT NULL,
+    district VARCHAR(255) NOT NULL,
+    street   VARCHAR(255) NOT NULL,
+    house    VARCHAR(255) NOT NULL,
+    text     VARCHAR(255)
 );
 -- +goose StatementEnd
 
