@@ -1,20 +1,21 @@
 package handler
 
 import (
+	"log/slog"
 	"strconv"
+	"treners_app/internal/logger"
 	"treners_app/internal/repository"
 
 	"github.com/gofiber/fiber/v2"
-	"go.uber.org/zap"
 )
 
 type Service struct {
 	repo   *repository.Repository
-	log    *zap.Logger
+	log    *slog.Logger
 	secret string
 }
 
-func NewService(repo *repository.Repository, log *zap.Logger, secret string) (*Service, error) {
+func NewService(repo *repository.Repository, log *slog.Logger, secret string) (*Service, error) {
 	return &Service{
 		repo:   repo,
 		log:    log,
@@ -35,7 +36,7 @@ func (s *Service) ListenAndServe(port int) error {
 
 	err := app.Listen(":" + strconv.Itoa(port))
 	if err != nil {
-		s.log.Error("Server failed to start", zap.Error(err))
+		s.log.Error("Server failed to start", logger.Err(err))
 	}
 
 	return err

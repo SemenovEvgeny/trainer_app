@@ -9,33 +9,31 @@ import (
 )
 
 type Config struct {
-	// env: считываем из переменной окружения, если файла конфига нет, то приложение не запустится
-	Env        string `yaml:"env" env:"ENV" env-default:"local" env-required:"true"`
-	Storage    `yaml:"storage"`
-	HTTPServer `yaml:"http_server"`
+	Env        string `env:"ENV"          env-default:"local" env-required:"true" json:"env"`
+	Storage    `json:"storage"`
+	HTTPServer `json:"http_server"`
 }
 
 type Storage struct {
-	DBHost          string `yaml:"db_host" env_required:"true"`
-	DBPort          string `yaml:"db_port" env_required:"true"`
-	DBUser          string `yaml:"db_user" env_required:"true"`
-	DBName          string `yaml:"db_name" env_required:"true"`
-	DBPass          string `yaml:"db_pass" env_required:"true" env:"DB_SERVER_PASSWORD"`
-	DSN             string `yaml:"db_dsn" env_required:"true"`
-	DBMaxConnection int32  `yaml:"db_max_connection"`
+	Host          string `env_required:"true"          json:"host"`
+	Port          string `env_required:"true"          json:"port"`
+	User          string `env_required:"true"          json:"user"`
+	Name          string `env_required:"true"          json:"name"`
+	Pass          string `env_required:"true"          json:"pass"          env:"DB_SERVER_PASSWORD"`
+	DSN           string `env_required:"true"          json:"dsn"`
+	MaxConnection int32  `json:"max_connection"`
 }
 
 type HTTPServer struct {
-	Address     string        `yaml:"address"`
-	Port        int           `yaml:"port"`
-	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
-	User        string        `yaml:"user" env-required:"true"`
-	Password    string        `yaml:"password" env_required:"true" env:"HTTP_SERVER_PASSWORD"`
+	Address     string        `json:"address"`
+	Port        int           `json:"port"`
+	Timeout     time.Duration `env-default:"4s"    json:"timeout"`
+	IdleTimeout time.Duration `env-default:"60s"   json:"idle_timeout"`
+	User        string        `env-required:"true" json:"user"`
+	Password    string        `env_required:"true" json:"password"`
 }
 
 func NewConfig() *Config {
-
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is not set")
@@ -43,15 +41,14 @@ func NewConfig() *Config {
 
 	// проверяем наличие файла конфигурации
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Fatal("config file do not exist: %s", configPath)
+		log.Fatalf("config file do not exist: %s", configPath)
 	}
 
 	var cfg Config
 
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		log.Fatal("can`t read config: %s", err)
+		log.Fatalf("can`t read config: %s", err)
 	}
 
 	return &cfg
-
 }

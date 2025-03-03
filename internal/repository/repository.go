@@ -3,19 +3,19 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"treners_app/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.uber.org/zap"
 )
 
 type Repository struct {
 	dsn  string
 	Conn *pgxpool.Pool
-	log  *zap.Logger
+	log  *slog.Logger
 }
 
-func NewRepository(ctx context.Context, cfg config.Storage, log *zap.Logger) (repo *Repository, err error) {
+func NewRepository(ctx context.Context, cfg config.Storage, log *slog.Logger) (repo *Repository, err error) {
 	repo = &Repository{
 		dsn: cfg.DSN,
 	}
@@ -27,7 +27,7 @@ func NewRepository(ctx context.Context, cfg config.Storage, log *zap.Logger) (re
 		return nil, fmt.Errorf("failed to parse PostgreSQL config: %w", err)
 	}
 
-	pool.MaxConns = int32(cfg.DBMaxConnection)
+	pool.MaxConns = cfg.MaxConnection
 
 	repo.Conn, err = pgxpool.NewWithConfig(ctx, pool)
 	if err != nil {
