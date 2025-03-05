@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+
 	"treners_app/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,7 +12,7 @@ import (
 
 type Repository struct {
 	dsn  string
-	Conn *pgxpool.Pool
+	conn *pgxpool.Pool
 	log  *slog.Logger
 }
 
@@ -29,7 +30,7 @@ func NewRepository(ctx context.Context, cfg config.Storage, log *slog.Logger) (r
 
 	pool.MaxConns = cfg.MaxConnection
 
-	repo.Conn, err = pgxpool.NewWithConfig(ctx, pool)
+	repo.conn, err = pgxpool.NewWithConfig(ctx, pool)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create PostgreSQL Connection pool: %w", err)
 	}
