@@ -13,12 +13,12 @@ const (
 	EnvProd  EnvLevel = "prod"
 )
 
-type LoggerConfig struct {
+type Config struct {
 	Format string
 	Level  slog.Level
 }
 
-var envLoggerConfigs = map[EnvLevel]LoggerConfig{
+var envLoggerConfigs = map[EnvLevel]Config{
 	EnvLocal: {Format: "text", Level: slog.LevelDebug},
 	EnvDev:   {Format: "json", Level: slog.LevelDebug},
 	EnvProd:  {Format: "json", Level: slog.LevelInfo},
