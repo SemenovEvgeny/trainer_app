@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"log/slog"
+
 	"treners_app/internal/config"
-	"treners_app/internal/handler"
+	"treners_app/internal/http"
 	"treners_app/internal/logger"
 	"treners_app/internal/repository"
 )
@@ -15,7 +16,6 @@ func main() {
 	cfg := config.NewConfig()
 
 	log := logger.NewLogger(cfg.Env)
-
 	log.Info("Logger initialized successfully")
 
 	log.Info("Start on server",
@@ -23,19 +23,17 @@ func main() {
 	)
 
 	var repo *repository.Repository
-
 	repo, err := repository.NewRepository(ctx, cfg.Storage, log)
 	if err != nil {
 		log.Error("failed to initialize repository", logger.Err(err))
 	}
-
 	log.Info("Repository initialized successfully")
 
-	var srv *handler.Service
+	var srv *http.Service
 
 	var secret string
 
-	srv, err = handler.NewService(repo, log, secret)
+	srv, err = http.NewService(repo, log, secret)
 	if err != nil {
 		log.Error("failed to initialize service", logger.Err(err))
 	}

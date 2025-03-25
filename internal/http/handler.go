@@ -1,8 +1,10 @@
-package handler
+package http
 
 import (
 	"log/slog"
 	"strconv"
+
+	"treners_app/internal/handler/health"
 	"treners_app/internal/logger"
 	"treners_app/internal/repository"
 
@@ -26,7 +28,7 @@ func NewService(repo *repository.Repository, log *slog.Logger, secret string) (*
 func (s *Service) SetupRoutes() *fiber.App {
 	app := fiber.New()
 
-	app.Get("/probe/readiness", probeReadiness)
+	app.Get("/probe/readiness", health.ProbeReadiness)
 
 	return app
 }
@@ -40,10 +42,4 @@ func (s *Service) ListenAndServe(port int) error {
 	}
 
 	return err
-}
-
-func probeReadiness(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"ready": true,
-	})
 }

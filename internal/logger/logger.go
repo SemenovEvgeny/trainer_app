@@ -24,10 +24,10 @@ var envLoggerConfigs = map[EnvLevel]Config{
 	EnvProd:  {Format: "json", Level: slog.LevelInfo},
 }
 
-func NewLogger(env EnvLevel) *slog.Logger {
+func NewLogger(env string) *slog.Logger {
 	var log *slog.Logger
 
-	config, exists := envLoggerConfigs[env]
+	config, exists := envLoggerConfigs[EnvLevel(env)]
 	if !exists {
 		config = envLoggerConfigs[EnvLocal]
 	}
