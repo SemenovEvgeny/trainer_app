@@ -1,8 +1,8 @@
-package health
+package probe
 
 import "github.com/gofiber/fiber/v2"
 
-func ProbeReadiness(c *fiber.Ctx) error {
+func Liveness(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"ready": true,
 	})

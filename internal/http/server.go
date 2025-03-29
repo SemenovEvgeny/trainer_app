@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"strconv"
 
-	"treners_app/internal/handler/health"
+	"treners_app/internal/handler/probe"
 	"treners_app/internal/logger"
 	"treners_app/internal/repository"
 
@@ -12,29 +12,28 @@ import (
 )
 
 type Service struct {
-	repo   *repository.Repository
-	log    *slog.Logger
-	secret string
+	repo *repository.Repository
+	log  *slog.Logger
 }
 
-func NewService(repo *repository.Repository, log *slog.Logger, secret string) (*Service, error) {
+func NewService(repo *repository.Repository, log *slog.Logger) (*Service, error) {
 	return &Service{
-		repo:   repo,
-		log:    log,
-		secret: secret,
+		repo: repo,
+		log:  log,
 	}, nil
 }
 
-func (s *Service) SetupRoutes() *fiber.App {
+func (s *Service) setupRoutes() *fiber.App {
 	app := fiber.New()
 
-	app.Get("/probe/readiness", health.ProbeReadiness)
+	app.Get("/probe/readiness", probe.Readiness)
+	app.Get("/probe/liveness", probe.Liveness)
 
 	return app
 }
 
 func (s *Service) ListenAndServe(port int) error {
-	app := s.SetupRoutes()
+	app := s.setupRoutes()
 
 	err := app.Listen(":" + strconv.Itoa(port))
 	if err != nil {
