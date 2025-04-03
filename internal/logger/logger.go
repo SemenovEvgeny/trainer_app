@@ -3,6 +3,9 @@ package logger
 import (
 	"log/slog"
 	"os"
+	"sync"
+
+	"treners_app/internal/config"
 )
 
 type EnvLevel string
@@ -13,33 +16,41 @@ const (
 	EnvProd  EnvLevel = "prod"
 )
 
-type Config struct {
+type LogConfig struct {
 	Format string
 	Level  slog.Level
 }
 
-var envLoggerConfigs = map[EnvLevel]Config{
+var envLoggerConfigs = map[EnvLevel]LogConfig{
 	EnvLocal: {Format: "text", Level: slog.LevelDebug},
 	EnvDev:   {Format: "json", Level: slog.LevelDebug},
 	EnvProd:  {Format: "json", Level: slog.LevelInfo},
 }
 
-func NewLogger(env string) *slog.Logger {
-	var log *slog.Logger
+var (
+	instance *slog.Logger
+	once     sync.Once
+)
 
-	config, exists := envLoggerConfigs[EnvLevel(env)]
-	if !exists {
-		config = envLoggerConfigs[EnvLocal]
-	}
+func GetLogger() *slog.Logger {
+	config := config.GetConfig()
 
-	var handler slog.Handler
-	if config.Format == "text" {
-		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: config.Level})
-	} else {
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.Level})
-	}
+	once.Do(func() {
 
-	log = slog.New(handler)
+		logConfig, exists := envLoggerConfigs[EnvLevel(config.Env)]
+		if !exists {
+			logConfig = envLoggerConfigs[EnvLocal]
+		}
 
-	return log
+		var handler slog.Handler
+		if logConfig.Format == "text" {
+			handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logConfig.Level})
+		} else {
+			handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logConfig.Level})
+		}
+
+		instance = slog.New(handler)
+	})
+
+	return instance
 }

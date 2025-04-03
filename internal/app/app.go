@@ -15,35 +15,30 @@ func NewApp() {
 
 	ctx := context.Background()
 
-	cfg, log := initBase()
+	cfg := config.GetConfig()
 
-	err := startApp(ctx, cfg, log)
-	if err != nil {
-		log.Error("Error starting app: ", logger.Err(err))
-
-		os.Exit(1)
-	}
-
-}
-
-func initBase() (cfg *config.Config, log *slog.Logger) {
-	cfg = config.NewConfig()
-
-	log = logger.NewLogger(cfg.Env)
+	log := logger.GetLogger()
 	log.Info("Logger initialized successfully")
 
 	log.Info("Start on server",
 		slog.String("env", cfg.Env),
 	)
 
-	return cfg, log
+	err := startApp(ctx)
+	if err != nil {
+		log.Error("Error starting app: ", logger.Err(err))
+
+		os.Exit(1)
+	}
 }
 
-func startApp(ctx context.Context, cfg *config.Config, log *slog.Logger) (err error) {
+func startApp(ctx context.Context) (err error) {
+	cfg := config.GetConfig()
+	log := logger.GetLogger()
 
 	var repo *repository.Repository
 
-	repo, err = repository.NewRepository(ctx, cfg.Storage)
+	repo, err = repository.NewRepository(ctx)
 	if err != nil {
 		log.Error("failed to initialize repository", logger.Err(err))
 
@@ -54,7 +49,7 @@ func startApp(ctx context.Context, cfg *config.Config, log *slog.Logger) (err er
 
 	var srv *http.Service
 
-	srv, err = http.NewService(repo, log)
+	srv, err = http.NewService(repo)
 	if err != nil {
 		log.Error("failed to initialize service", logger.Err(err))
 

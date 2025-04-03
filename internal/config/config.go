@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -33,22 +34,30 @@ type HTTPServer struct {
 	Password    string        `env_required:"true" json:"password"`
 }
 
-func NewConfig() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		log.Fatal("CONFIG_PATH is not set")
-	}
+var (
+	instance *Config
+	once     sync.Once
+)
 
-	// проверяем наличие файла конфигурации
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Fatalf("config file do not exist: %s", configPath)
-	}
+func GetConfig() *Config {
+	once.Do(func() {
+		configPath := os.Getenv("CONFIG_PATH")
+		if configPath == "" {
+			log.Fatal("CONFIG_PATH is not set")
+		}
 
-	var cfg Config
+		// проверяем наличие файла конфигурации
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			log.Fatalf("config file do not exist: %s", configPath)
+		}
 
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		log.Fatalf("can`t read config: %s", err)
-	}
+		var cfg Config
+		if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+			log.Fatalf("can't read config: %s", err)
+		}
+		instance = &cfg
+	})
 
-	return &cfg
+	return instance
+
 }

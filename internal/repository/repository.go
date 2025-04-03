@@ -14,7 +14,9 @@ type Repository struct {
 	conn *pgx.Conn
 }
 
-func NewRepository(ctx context.Context, cfg config.Storage) (repo *Repository, err error) {
+func NewRepository(ctx context.Context) (repo *Repository, err error) {
+	cfg := config.GetConfig()
+
 	repo = &Repository{
 		dsn: cfg.DSN,
 	}

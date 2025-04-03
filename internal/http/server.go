@@ -16,7 +16,9 @@ type Service struct {
 	log  *slog.Logger
 }
 
-func NewService(repo *repository.Repository, log *slog.Logger) (*Service, error) {
+func NewService(repo *repository.Repository) (*Service, error) {
+	log := logger.GetLogger()
+
 	return &Service{
 		repo: repo,
 		log:  log,
