@@ -5,10 +5,11 @@ CREATE TABLE service
     id          SERIAL PRIMARY KEY,
     trainer_id  INT,
     name        VARCHAR(255),
+    price_id    INT,
     description TEXT,
-    price       DECIMAL(10, 2),
-    locations   TEXT,
-    FOREIGN KEY (trainer_id) REFERENCES trainer (id) ON DELETE CASCADE
+    location_id INT,
+    FOREIGN KEY (trainer_id) REFERENCES trainer (id) ON DELETE CASCADE,
+    FOREIGN KEY (price_id) REFERENCES service_price (id) ON DELETE CASCADE
 );
 -- +goose StatementEnd
 

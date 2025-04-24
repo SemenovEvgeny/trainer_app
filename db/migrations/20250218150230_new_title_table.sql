@@ -4,7 +4,7 @@ CREATE TABLE title
 (
     id         SERIAL PRIMARY KEY,
     trainer_id INT,
-    titles     TEXT,
+    value      TEXT,
     FOREIGN KEY (trainer_id) REFERENCES trainer (id) ON DELETE CASCADE
 );
 -- +goose StatementEnd

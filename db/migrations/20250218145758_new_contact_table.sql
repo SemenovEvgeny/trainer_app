@@ -13,5 +13,5 @@ CREATE TABLE contact
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS trainer;
+DROP TABLE IF EXISTS contact;
 -- +goose StatementEnd

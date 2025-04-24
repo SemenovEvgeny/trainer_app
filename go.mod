@@ -6,6 +6,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.7.2
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
