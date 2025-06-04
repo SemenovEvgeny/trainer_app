@@ -35,3 +35,7 @@ func NewRepository(ctx context.Context) (repo *Repository, err error) {
 
 	return repo, nil
 }
+
+func (r *Repository) BeginTx(ctx context.Context) (pgx.Tx, error) {
+	return r.conn.Begin(ctx)
+}
