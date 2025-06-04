@@ -144,7 +144,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 					TypeID:    contact.TypeID,
 					Contact:   contact.Contact,
 				}
-				if err := repo.CreateContact(c.Context(), &newContact); err != nil {
+				if err = repo.CreateContact(c.Context(), &newContact); err != nil {
 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 						"error": "Failed to create contact",
 					})
@@ -155,7 +155,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 		}
 
 		// Подтверждение транзакции
-		if err := tx.Commit(c.Context()); err != nil {
+		if err = tx.Commit(c.Context()); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Failed to commit transaction",
 			})
