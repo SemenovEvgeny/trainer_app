@@ -5,15 +5,17 @@ import (
 	"fmt"
 
 	"treners_app/internal/domain"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func (r *Repository) CreateTrainer(ctx context.Context, trainer *domain.Trainer) error {
+func (r *Repository) CreateTrainer(ctx context.Context, tx pgx.Tx, trainer *domain.Trainer) error {
 	query := `
 		INSERT INTO trainer (last_name, first_name, middle_name, description, is_active)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id`
 
-	err := r.conn.QueryRow(ctx, query,
+	err := tx.QueryRow(ctx, query,
 		trainer.LastName,
 		trainer.FirstName,
 		trainer.MiddleName,
@@ -22,50 +24,77 @@ func (r *Repository) CreateTrainer(ctx context.Context, trainer *domain.Trainer)
 	).Scan(&trainer.ID)
 
 	if err != nil {
-		return fmt.Errorf("failed to create trainer: %w", err)
+		return fmt.Errorf("failed to create trainer (tx): %w", err)
 	}
 
 	return nil
 }
 
-func (r *Repository) GetTrainer(ctx context.Context, trainer *domain.Trainer) error {
+func (r *Repository) GetTrainerByName(ctx context.Context, q string) (domain.TrainerList, error) {
 	query := `
-		INSERT INTO trainer (last_name, first_name, middle_name, description, is_active)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id`
+		SELECT id, last_name, first_name, middle_name, description, is_active
+		FROM trainer
+		WHERE first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%'
+		ORDER BY id`
 
-	err := r.conn.QueryRow(ctx, query,
-		trainer.LastName,
-		trainer.FirstName,
-		trainer.MiddleName,
-		trainer.Description,
-		trainer.IsActive,
-	).Scan(&trainer.ID)
-
+	rows, err := r.conn.Query(ctx, query, q)
 	if err != nil {
-		return fmt.Errorf("failed to create trainer: %w", err)
+		return nil, fmt.Errorf("failed to search trainers: %w", err)
+	}
+	defer rows.Close()
+
+	var trainers domain.TrainerList
+	for rows.Next() {
+		var t domain.Trainer
+		if err := rows.Scan(
+			&t.ID,
+			&t.LastName,
+			&t.FirstName,
+			&t.MiddleName,
+			&t.Description,
+			&t.IsActive,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan trainer: %w", err)
+		}
+		trainers = append(trainers, t)
+	}
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("rows error: %w", rows.Err())
 	}
 
-	return nil
+	return trainers, nil
 }
 
-func (r *Repository) GetAllTrainers(ctx context.Context, trainer *domain.Trainer) error {
+func (r *Repository) GetAllTrainers(ctx context.Context) (domain.TrainerList, error) {
 	query := `
-		INSERT INTO trainer (last_name, first_name, middle_name, description, is_active)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id`
+		SELECT id, last_name, first_name, middle_name, description, is_active
+		FROM trainer
+		ORDER BY id`
 
-	err := r.conn.QueryRow(ctx, query,
-		trainer.LastName,
-		trainer.FirstName,
-		trainer.MiddleName,
-		trainer.Description,
-		trainer.IsActive,
-	).Scan(&trainer.ID)
-
+	rows, err := r.conn.Query(ctx, query)
 	if err != nil {
-		return fmt.Errorf("failed to create trainer: %w", err)
+		return nil, fmt.Errorf("failed to query trainers: %w", err)
+	}
+	defer rows.Close()
+
+	var trainers domain.TrainerList
+	for rows.Next() {
+		var t domain.Trainer
+		if err := rows.Scan(
+			&t.ID,
+			&t.LastName,
+			&t.FirstName,
+			&t.MiddleName,
+			&t.Description,
+			&t.IsActive,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan trainer: %w", err)
+		}
+		trainers = append(trainers, t)
+	}
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("rows error: %w", rows.Err())
 	}
 
-	return nil
+	return trainers, nil
 }

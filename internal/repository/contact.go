@@ -5,15 +5,17 @@ import (
 	"fmt"
 
 	"treners_app/internal/domain"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func (r *Repository) CreateContact(ctx context.Context, contact *domain.Contact) error {
+func (r *Repository) CreateContact(ctx context.Context, tx pgx.Tx, contact *domain.Contact) error {
 	query := `
 		INSERT INTO contact (trainer_id, type_id, contact)
 		VALUES ($1, $2, $3)
 		RETURNING id`
 
-	err := r.conn.QueryRow(ctx, query,
+	err := tx.QueryRow(ctx, query,
 		contact.TrainerID,
 		contact.TypeID,
 		contact.Contact,

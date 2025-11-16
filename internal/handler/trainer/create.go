@@ -17,8 +17,8 @@ type CreateTrainerRequest struct {
 	FirstName    string    `json:"first_name" validate:"required"`
 	MiddleName   string    `json:"middle_name"`
 	Description  string    `json:"description"`
-	IsActive     *bool     `json:"is_active,omitempty"`
-	Achievements []string  `json:"achievements,Contacts"`
+	IsActive     bool      `json:"is_active,omitempty"`
+	Achievements []string  `json:"achievements,omitempty"`
 	Titles       []string  `json:"titles,omitempty"`
 	Contacts     []Contact `json:"contacts" validate:"required,min=1,dive"`
 }
@@ -66,17 +66,12 @@ func Create(repo *repository.Repository) fiber.Handler {
 			}
 		}
 
-		if req.IsActive == nil {
-			defaultActive := true
-			req.IsActive = &defaultActive
-		}
-
 		trainer := &domain.Trainer{
 			LastName:    req.LastName,
 			FirstName:   req.FirstName,
 			MiddleName:  req.MiddleName,
 			Description: req.Description,
-			IsActive:    *req.IsActive,
+			IsActive:    req.IsActive,
 		}
 
 		// Начало транзакции
@@ -89,7 +84,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 		defer tx.Rollback(c.Context())
 
 		// Создание тренера
-		if err := repo.CreateTrainer(c.Context(), trainer); err != nil {
+		if err := repo.CreateTrainer(c.Context(), tx, trainer); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Failed to create trainer",
 			})
@@ -101,13 +96,13 @@ func Create(repo *repository.Repository) fiber.Handler {
 
 		// Создание достижений
 		if len(req.Achievements) > 0 {
-			achievements := make([]domain.Achievement, 0, len(req.Achievements))
+			achievements := make(domain.AchievementList, 0, len(req.Achievements))
 			for _, value := range req.Achievements {
 				achievement := domain.Achievement{
 					TrainerID: trainer.ID,
 					Value:     value,
 				}
-				if err := repo.CreateAchievement(c.Context(), &achievement); err != nil {
+				if err := repo.CreateAchievement(c.Context(), tx, &achievement); err != nil {
 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 						"error": "Failed to create achievement",
 					})
@@ -125,7 +120,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 					TrainerID: trainer.ID,
 					Value:     value,
 				}
-				if err := repo.CreateTitle(c.Context(), &title); err != nil {
+				if err := repo.CreateTitle(c.Context(), tx, &title); err != nil {
 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 						"error": "Failed to create title",
 					})
@@ -144,7 +139,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 					TypeID:    contact.TypeID,
 					Contact:   contact.Contact,
 				}
-				if err = repo.CreateContact(c.Context(), &newContact); err != nil {
+				if err = repo.CreateContact(c.Context(), tx, &newContact); err != nil {
 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 						"error": "Failed to create contact",
 					})

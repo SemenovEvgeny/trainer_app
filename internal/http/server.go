@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"treners_app/internal/handler/probe"
+	"treners_app/internal/handler/sportsman"
 	"treners_app/internal/handler/trainer"
 	"treners_app/internal/logger"
 	"treners_app/internal/repository"
@@ -34,8 +35,13 @@ func (s *Service) setupRoutes() *fiber.App {
 
 	trainerGroup := app.Group("/api/trainers")
 	trainerGroup.Post("/create", trainer.Create(s.repo))
-	trainerGroup.Post("/update", trainer.Create(s.repo))
-	trainerGroup.Post("/delete", trainer.Create(s.repo))
+	trainerGroup.Get("/getByName", trainer.GetByName(s.repo))
+	// trainerGroup.Post("/update", trainer.Update(s.repo))
+	// trainerGroup.Post("/delete", trainer.Delete(s.repo))
+
+	sportsmanGroup := app.Group("/api/sportsman")
+	sportsmanGroup.Post("/create", sportsman.Create(s.repo))
+	sportsmanGroup.Get("/getByName", sportsman.GetByName(s.repo))
 
 	return app
 }

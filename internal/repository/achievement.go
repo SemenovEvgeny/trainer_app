@@ -5,15 +5,19 @@ import (
 	"fmt"
 
 	"treners_app/internal/domain"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func (r *Repository) CreateAchievement(ctx context.Context, achievement *domain.Achievement) error {
+func (r *Repository) CreateAchievement(ctx context.Context, tx pgx.Tx, achievement *domain.Achievement) error {
 	query := `
 		INSERT INTO achievement (trainer_id, value)
 		VALUES ($1, $2)
+		ON CONFLICT (trainer_id, value)
+		DO UPDATE SET value = EXCLUDED.value
 		RETURNING id`
 
-	err := r.conn.QueryRow(ctx, query,
+	err := tx.QueryRow(ctx, query,
 		achievement.TrainerID,
 		achievement.Value,
 	).Scan(&achievement.ID)
