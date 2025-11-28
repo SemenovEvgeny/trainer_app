@@ -1,38 +1,39 @@
 package trainer
 
 import (
+	"strconv"
+
 	"treners_app/internal/domain"
 	"treners_app/internal/repository"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-type Contact struct {
-	TypeID  int64  `json:"type_id" validate:"required"`
-	Contact string `json:"contact" validate:"required"`
-}
-
-type CreateTrainerRequest struct {
+type UpdateTrainerRequest struct {
+	ID           int       `json:"id"`
 	LastName     string    `json:"last_name" validate:"required"`
 	FirstName    string    `json:"first_name" validate:"required"`
 	MiddleName   string    `json:"middle_name"`
 	Description  string    `json:"description"`
-	IsActive     bool      `json:"is_active,omitempty"`
 	Achievements []string  `json:"achievements,omitempty"`
 	Titles       []string  `json:"titles,omitempty"`
 	Contacts     []Contact `json:"contacts" validate:"required,min=1,dive"`
 }
 
-type CreateTrainerResponse struct {
-	Trainer      *domain.Trainer      `json:"trainer"`
-	Achievements []domain.Achievement `json:"achievements,omitempty"`
-	Titles       []domain.Title       `json:"titles,omitempty"`
-	Contacts     []domain.Contact     `json:"contacts,required"`
-}
-
-func Create(repo *repository.Repository) fiber.Handler {
+// обновляем тренера с учетом его ид - неизменяемый параметр
+// меняем у тренера фио
+// меняем у тренера титулы и прочее
+// меняем у тренера контакты (на будущее)
+func Update(repo *repository.Repository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var req CreateTrainerRequest
+		var req UpdateTrainerRequest
+		ID := c.Query("id")
+		if ID == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "query param 'id' is required",
+			})
+		}
+
 		if err := c.BodyParser(&req); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Invalid request body",
@@ -49,12 +50,6 @@ func Create(repo *repository.Repository) fiber.Handler {
 		if req.FirstName == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "First name is required",
-			})
-		}
-
-		if req.IsActive != false {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Is active must be false",
 			})
 		}
 
@@ -77,7 +72,6 @@ func Create(repo *repository.Repository) fiber.Handler {
 			FirstName:   req.FirstName,
 			MiddleName:  req.MiddleName,
 			Description: req.Description,
-			IsActive:    req.IsActive,
 		}
 
 		// Начало транзакции
@@ -89,10 +83,17 @@ func Create(repo *repository.Repository) fiber.Handler {
 		}
 		defer tx.Rollback(c.Context())
 
-		// Создание тренера
-		if err = repo.CreateTrainer(c.Context(), tx, trainer); err != nil {
+		idTrainer, err := strconv.Atoi(ID)
+		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Failed to create trainer",
+				"error": "Failed trainer ID",
+			})
+		}
+
+		// Изменение тренера
+		if err = repo.UpdateTrainer(c.Context(), tx, trainer, idTrainer); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to update trainer",
 			})
 		}
 
@@ -108,7 +109,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 					TrainerID: trainer.ID,
 					Value:     value,
 				}
-				if err := repo.CreateAchievement(c.Context(), tx, &achievement); err != nil {
+				if err = repo.CreateAchievement(c.Context(), tx, &achievement); err != nil {
 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 						"error": "Failed to create achievement",
 					})
@@ -126,7 +127,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 					TrainerID: trainer.ID,
 					Value:     value,
 				}
-				if err := repo.CreateTitle(c.Context(), tx, &title); err != nil {
+				if err = repo.CreateTitle(c.Context(), tx, &title); err != nil {
 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 						"error": "Failed to create title",
 					})
@@ -162,6 +163,6 @@ func Create(repo *repository.Repository) fiber.Handler {
 			})
 		}
 
-		return c.Status(fiber.StatusCreated).JSON(response)
+		return c.Status(fiber.StatusAccepted).JSON(response)
 	}
 }

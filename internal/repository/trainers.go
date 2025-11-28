@@ -46,7 +46,7 @@ func (r *Repository) GetTrainerByName(ctx context.Context, q string) (domain.Tra
 	var trainers domain.TrainerList
 	for rows.Next() {
 		var t domain.Trainer
-		if err := rows.Scan(
+		if err = rows.Scan(
 			&t.ID,
 			&t.LastName,
 			&t.FirstName,
@@ -80,7 +80,7 @@ func (r *Repository) GetAllTrainers(ctx context.Context) (domain.TrainerList, er
 	var trainers domain.TrainerList
 	for rows.Next() {
 		var t domain.Trainer
-		if err := rows.Scan(
+		if err = rows.Scan(
 			&t.ID,
 			&t.LastName,
 			&t.FirstName,
@@ -97,4 +97,101 @@ func (r *Repository) GetAllTrainers(ctx context.Context) (domain.TrainerList, er
 	}
 
 	return trainers, nil
+}
+func (r *Repository) UpdateTrainer(ctx context.Context, tx pgx.Tx, trainer *domain.Trainer, q int) error {
+	query := `UPDATE trainer 
+	SET last_name = $1, 
+		first_name = $2, 
+		middle_name = $3, 
+		description = $4,
+	WHERE id = $5
+	RETURNING id, last_name, first_name, middle_name, description, is_active`
+
+	err := tx.QueryRow(ctx, query,
+		trainer.LastName,
+		trainer.FirstName,
+		trainer.MiddleName,
+		trainer.Description,
+		trainer.IsActive,
+		q,
+	).Scan(
+		&trainer.ID,
+		&trainer.LastName,
+		&trainer.FirstName,
+		&trainer.MiddleName,
+		&trainer.Description,
+		&trainer.IsActive,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update trainer (tx): %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) DeleteTrainer(ctx context.Context, ID string) (domain.Trainer, error) {
+	query := `UPDATE trainer 
+	SET is_active = false
+	WHERE id = $1
+	RETURNING id, last_name, first_name, middle_name, description, is_active`
+
+	var t domain.Trainer
+
+	rows, err := r.conn.Query(ctx, query, ID)
+	if err != nil {
+		fmt.Errorf("failed to search trainers: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err = rows.Scan(
+			&t.ID,
+			&t.LastName,
+			&t.FirstName,
+			&t.MiddleName,
+			&t.Description,
+			&t.IsActive,
+		); err != nil {
+			return t, fmt.Errorf("failed to scan trainer: %w", err)
+		}
+	}
+	if rows.Err() != nil {
+		return t, fmt.Errorf("rows error: %w", rows.Err())
+	}
+
+	return t, nil
+}
+
+func (r *Repository) ActivateTrainer(ctx context.Context, ID string) (domain.Trainer, error) {
+	query := `UPDATE trainer 
+	SET is_active = true
+	WHERE id = $1
+	RETURNING id, last_name, first_name, middle_name, description, is_active`
+
+	var t domain.Trainer
+
+	rows, err := r.conn.Query(ctx, query, ID)
+	if err != nil {
+		fmt.Errorf("failed to search trainers: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err = rows.Scan(
+			&t.ID,
+			&t.LastName,
+			&t.FirstName,
+			&t.MiddleName,
+			&t.Description,
+			&t.IsActive,
+		); err != nil {
+			return t, fmt.Errorf("failed to scan trainer: %w", err)
+		}
+	}
+	if rows.Err() != nil {
+		return t, fmt.Errorf("rows error: %w", rows.Err())
+	}
+
+	return t, nil
 }
