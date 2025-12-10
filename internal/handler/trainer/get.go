@@ -9,14 +9,14 @@ import (
 
 func GetByName(repo *repository.Repository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		n := c.Query("name")
-		if n == "" {
+		name := c.Query("name")
+		if name == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "query param 'name' is required",
 			})
 		}
 
-		list, err := repo.GetTrainerByName(c.Context(), n)
+		list, err := repo.GetTrainerByName(c.Context(), name)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to search trainers",

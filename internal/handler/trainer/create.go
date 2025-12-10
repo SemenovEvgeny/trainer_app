@@ -17,7 +17,7 @@ type CreateTrainerRequest struct {
 	FirstName    string    `json:"first_name" validate:"required"`
 	MiddleName   string    `json:"middle_name"`
 	Description  string    `json:"description"`
-	IsActive     bool      `json:"is_active,omitempty"`
+	IsActive     bool      `json:"is_active" validate:"required"`
 	Achievements []string  `json:"achievements,omitempty"`
 	Titles       []string  `json:"titles,omitempty"`
 	Contacts     []Contact `json:"contacts" validate:"required,min=1,dive"`
@@ -53,6 +53,12 @@ func Create(repo *repository.Repository) fiber.Handler {
 		}
 
 		if req.IsActive != false {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Is active must be false",
+			})
+		}
+
+		if req.IsActive == false {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Is active must be false",
 			})
