@@ -13,7 +13,11 @@ func (r *Repository) CreateContact(ctx context.Context, tx pgx.Tx, contact *doma
 	query := `
 		INSERT INTO contact (trainer_id, type_id, contact)
 		VALUES ($1, $2, $3)
-		RETURNING id`
+		ON CONFLICT (trainer_id, type_id, contact) 
+        DO UPDATE SET
+            contact = EXCLUDED.contact,
+            updated_at = CURRENT_TIMESTAMP
+		RETURNING id;`
 
 	err := tx.QueryRow(ctx, query,
 		contact.TrainerID,

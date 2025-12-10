@@ -13,7 +13,12 @@ func (r *Repository) CreateSportsman(ctx context.Context, tx pgx.Tx, sportsman *
 	query := `
 		INSERT INTO client (last_name, first_name, middle_name, is_active)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id`
+		ON CONFLICT (last_name, first_name, middle_name)
+		DO UPDATE SET 
+		    last_name = EXCLUDED.last_name
+		    first_name = EXCLUDED.first_name
+		    middle_name = EXCLUDED.middle_name
+		RETURNING id;`
 
 	err := tx.QueryRow(ctx, query,
 		sportsman.LastName,

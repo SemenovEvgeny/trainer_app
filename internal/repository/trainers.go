@@ -13,7 +13,12 @@ func (r *Repository) CreateTrainer(ctx context.Context, tx pgx.Tx, trainer *doma
 	query := `
 		INSERT INTO trainer (last_name, first_name, middle_name, description, is_active)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id`
+		ON CONFLICT (last_name, first_name, middle_name)
+		DO UPDATE SET 
+		    last_name = EXCLUDED.last_name
+		    first_name = EXCLUDED.first_name
+		    middle_name = EXCLUDED.middle_name
+		RETURNING id;`
 
 	err := tx.QueryRow(ctx, query,
 		trainer.LastName,

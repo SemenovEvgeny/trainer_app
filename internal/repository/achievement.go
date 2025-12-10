@@ -14,8 +14,10 @@ func (r *Repository) CreateAchievement(ctx context.Context, tx pgx.Tx, achieveme
 		INSERT INTO achievement (trainer_id, value)
 		VALUES ($1, $2)
 		ON CONFLICT (trainer_id, value)
-		DO UPDATE SET value = EXCLUDED.value
-		RETURNING id`
+		DO UPDATE SET 
+		    value = EXCLUDED.value
+		    updated_at = CURRENT_TIMESTAMP
+		RETURNING id;`
 
 	err := tx.QueryRow(ctx, query,
 		achievement.TrainerID,
