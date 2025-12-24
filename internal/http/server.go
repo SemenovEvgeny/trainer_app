@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"treners_app/internal/handler/auth"
 	"treners_app/internal/handler/probe"
 	"treners_app/internal/handler/sportsman"
 	"treners_app/internal/handler/trainer"
@@ -32,6 +33,10 @@ func (s *Service) setupRoutes() *fiber.App {
 
 	app.Get("/probe/readiness", probe.Readiness)
 	app.Get("/probe/liveness", probe.Liveness)
+
+	// Аутентификация
+	authGroup := app.Group("/api/auth")
+	authGroup.Post("/register", auth.Register(s.repo))
 
 	trainerGroup := app.Group("/api/trainers")
 	trainerGroup.Post("/create", trainer.Create(s.repo))

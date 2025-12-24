@@ -1,11 +1,14 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE title
-    RENAME COLUMN titles TO value;
+CREATE TABLE role
+(
+    id    SERIAL PRIMARY KEY,
+    value VARCHAR(50) NOT NULL UNIQUE
+);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE title
-    RENAME COLUMN value TO titles;
+DROP TABLE IF EXISTS role;
 -- +goose StatementEnd
+

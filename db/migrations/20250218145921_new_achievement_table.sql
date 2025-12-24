@@ -11,5 +11,5 @@ CREATE TABLE achievement
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS trainer;
+DROP TABLE IF EXISTS achievement;
 -- +goose StatementEnd

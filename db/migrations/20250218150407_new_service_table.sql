@@ -3,13 +3,13 @@
 CREATE TABLE service
 (
     id          SERIAL PRIMARY KEY,
-    trainer_id  INT,
-    name        VARCHAR(255),
-    price_id    INT,
+    trainer_id  INTEGER NOT NULL,
+    name        VARCHAR(255) NOT NULL,
     description TEXT,
-    location_id INT,
+    location_id INTEGER,
+    price_id    INTEGER,
     FOREIGN KEY (trainer_id) REFERENCES trainer (id) ON DELETE CASCADE,
-    FOREIGN KEY (price_id) REFERENCES service_price (id) ON DELETE CASCADE
+    FOREIGN KEY (location_id) REFERENCES location (id) ON DELETE SET NULL
 );
 -- +goose StatementEnd
 

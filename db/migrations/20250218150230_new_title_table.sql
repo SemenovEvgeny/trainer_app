@@ -11,5 +11,5 @@ CREATE TABLE title
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS trainer;
+DROP TABLE IF EXISTS title;
 -- +goose StatementEnd

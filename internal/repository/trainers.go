@@ -13,12 +13,7 @@ func (r *Repository) CreateTrainer(ctx context.Context, tx pgx.Tx, trainer *doma
 	query := `
 		INSERT INTO trainer (last_name, first_name, middle_name, description, is_active)
 		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (last_name, first_name, middle_name)
-		DO UPDATE SET 
-		    last_name = EXCLUDED.last_name
-		    first_name = EXCLUDED.first_name
-		    middle_name = EXCLUDED.middle_name
-		RETURNING id;`
+		RETURNING id`
 
 	err := tx.QueryRow(ctx, query,
 		trainer.LastName,
@@ -144,7 +139,7 @@ func (r *Repository) DeleteTrainer(ctx context.Context, ID string) (domain.Train
 
 	rows, err := r.conn.Query(ctx, query, ID)
 	if err != nil {
-		fmt.Errorf("failed to search trainers: %w", err)
+		return t, fmt.Errorf("failed to search trainers: %w", err)
 	}
 	defer rows.Close()
 
@@ -177,7 +172,7 @@ func (r *Repository) ActivateTrainer(ctx context.Context, ID string) (domain.Tra
 
 	rows, err := r.conn.Query(ctx, query, ID)
 	if err != nil {
-		fmt.Errorf("failed to search trainers: %w", err)
+		return t, fmt.Errorf("failed to search trainers: %w", err)
 	}
 	defer rows.Close()
 
@@ -209,6 +204,15 @@ func (r *Repository) IsExistsTrainer(ctx context.Context, ID string) error {
 	}
 	if !exists {
 		return fmt.Errorf("trainer with id %s not found", ID)
+	}
+	return nil
+}
+
+func (r *Repository) UpdateTrainerUserID(ctx context.Context, tx pgx.Tx, trainerID, userID int64) error {
+	query := `UPDATE trainer SET user_id = $1 WHERE id = $2`
+	_, err := tx.Exec(ctx, query, userID, trainerID)
+	if err != nil {
+		return fmt.Errorf("failed to update trainer user_id: %w", err)
 	}
 	return nil
 }
