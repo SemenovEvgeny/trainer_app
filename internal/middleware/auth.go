@@ -1,36 +1,73 @@
 package middleware
 
 import (
-	"context"
-	"go-jwt-auth/utils"
-	"net/http"
 	"strings"
+
+	"treners_app/internal/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
+const (
+	UserIDKey    = "userID"
+	UserEmailKey = "userEmail"
+)
+
+func AuthMiddleware() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Authorization header required", http.StatusUnauthorized)
-			return
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Authorization header required",
+			})
 		}
 
-		// Формат заголовка: "Bearer <токен>"
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
-			return
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid Authorization header format. Expected: Bearer <token>",
+			})
 		}
 
 		tokenString := parts[1]
 		claims, err := utils.VerifyToken(tokenString)
 		if err != nil {
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-			return
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid or expired token",
+			})
 		}
 
-		// Добавляем ID пользователя в контекст запроса
-		ctx := context.WithValue(r.Context(), "userID", claims.UserID)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		c.Locals(UserIDKey, claims.UserID)
+		c.Locals(UserEmailKey, claims.Email)
+
+		return c.Next()
+	}
+}
+
+func RequireAuth() fiber.Handler {
+	return AuthMiddleware()
+}
+
+func GetUserID(c *fiber.Ctx) (int64, bool) {
+	userID, ok := c.Locals(UserIDKey).(int64)
+	return userID, ok
+}
+
+func GetUserEmail(c *fiber.Ctx) (string, bool) {
+	email, ok := c.Locals(UserEmailKey).(string)
+	return email, ok
+}
+
+func RequireRole(allowedRoles ...string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		userID, ok := GetUserID(c)
+		if !ok {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "User not authenticated",
+			})
+		}
+		c.Locals(UserIDKey, userID)
+
+		return c.Next()
 	}
 }

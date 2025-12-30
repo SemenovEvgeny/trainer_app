@@ -16,3 +16,8 @@ type Role struct {
 	ID    int64  `json:"id"`
 	Value string `json:"value"`
 }
+
+type UserRegister struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}

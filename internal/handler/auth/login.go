@@ -1,8 +1,6 @@
 package auth
 
 import (
-
-	"treners_app/internal/domain"
 	"treners_app/internal/repository"
 	"treners_app/internal/utils"
 
@@ -10,15 +8,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserLoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func Login(repo *repository.Repository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var req RegisterRequest
+		var req UserLoginRequest
 		if err := c.BodyParser(&req); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Invalid request body",
 			})
 		}
-
 		// Валидация email
 		if req.Email == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -33,14 +35,16 @@ func Login(repo *repository.Repository) fiber.Handler {
 			})
 		}
 
-		var user domain.User
-		if _, err := repo.GetUserByEmail(c.Context(), req.Email); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "User not found",
+		// Получение пользователя из базы данных
+		user, err := repo.GetUserByEmail(c.Context(), req.Email)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid credentials",
 			})
 		}
+
 		// Проверка пароля
-		err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+		err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid credentials",
@@ -49,14 +53,11 @@ func Login(repo *repository.Repository) fiber.Handler {
 		// Генерация JWT токена
 		token, err := utils.GenerateToken(user.ID, user.Email)
 		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Server error",
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to generate token: " + err.Error(),
 			})
 		}
 
-		// Отправка токена клиенту
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"token":"` + token + `"}`))
-	}
+		return c.JSON(fiber.Map{"token": token})
 	}
 }
