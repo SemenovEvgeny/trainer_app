@@ -11,14 +11,9 @@ import (
 
 func (r *Repository) CreateSportsman(ctx context.Context, tx pgx.Tx, sportsman *domain.Sportsman) error {
 	query := `
-		INSERT INTO client (last_name, first_name, middle_name, is_active)
+		INSERT INTO sportsman (last_name, first_name, middle_name, is_active)
 		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (last_name, first_name, middle_name)
-		DO UPDATE SET 
-		    last_name = EXCLUDED.last_name
-		    first_name = EXCLUDED.first_name
-		    middle_name = EXCLUDED.middle_name
-		RETURNING id;`
+		RETURNING id`
 
 	err := tx.QueryRow(ctx, query,
 		sportsman.LastName,
@@ -37,7 +32,7 @@ func (r *Repository) CreateSportsman(ctx context.Context, tx pgx.Tx, sportsman *
 func (r *Repository) GetSportsmanByName(ctx context.Context, q string) (domain.SportsmanList, error) {
 	query := `
 		SELECT id, last_name, first_name, middle_name, is_active
-		FROM client
+		FROM sportsman
 		WHERE first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%'
 		ORDER BY id`
 
@@ -71,7 +66,7 @@ func (r *Repository) GetSportsmanByName(ctx context.Context, q string) (domain.S
 func (r *Repository) GetAllClient(ctx context.Context) (domain.SportsmanList, error) {
 	query := `
 		SELECT id, last_name, first_name, middle_name, description, is_active
-		FROM client
+		FROM sportsman
 		ORDER BY id`
 
 	rows, err := r.conn.Query(ctx, query)
@@ -99,4 +94,13 @@ func (r *Repository) GetAllClient(ctx context.Context) (domain.SportsmanList, er
 	}
 
 	return sportsman, nil
+}
+
+func (r *Repository) UpdateSportsmanUserID(ctx context.Context, tx pgx.Tx, sportsmanID, userID int64) error {
+	query := `UPDATE sportsman SET user_id = $1 WHERE id = $2`
+	_, err := tx.Exec(ctx, query, userID, sportsmanID)
+	if err != nil {
+		return fmt.Errorf("failed to update sportsman user_id: %w", err)
+	}
+	return nil
 }

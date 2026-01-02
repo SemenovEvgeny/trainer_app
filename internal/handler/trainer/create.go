@@ -19,15 +19,15 @@ type CreateTrainerRequest struct {
 	Description  string    `json:"description"`
 	IsActive     bool      `json:"is_active" validate:"required"`
 	Achievements []string  `json:"achievements,omitempty"`
-	Titles       []string  `json:"titles,omitempty"`
+	SportIDs     []int64   `json:"sport_ids,omitempty"` // ID видов спорта
 	Contacts     []Contact `json:"contacts" validate:"required,min=1,dive"`
 }
 
 type CreateTrainerResponse struct {
 	Trainer      *domain.Trainer      `json:"trainer"`
 	Achievements []domain.Achievement `json:"achievements,omitempty"`
-	Titles       []domain.Title       `json:"titles,omitempty"`
-	Contacts     []domain.Contact     `json:"contacts,required"`
+	SportTypes   []domain.SportType   `json:"sport_types,omitempty"`
+	Contacts     []domain.Contact     `json:"contacts"`
 }
 
 func Create(repo *repository.Repository) fiber.Handler {
@@ -52,13 +52,7 @@ func Create(repo *repository.Repository) fiber.Handler {
 			})
 		}
 
-		if req.IsActive != false {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Is active must be false",
-			})
-		}
-
-		if req.IsActive == false {
+		if req.IsActive {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Is active must be false",
 			})
@@ -124,22 +118,21 @@ func Create(repo *repository.Repository) fiber.Handler {
 			response.Achievements = achievements
 		}
 
-		// Создание званий
-		if len(req.Titles) > 0 {
-			titles := make([]domain.Title, 0, len(req.Titles))
-			for _, value := range req.Titles {
-				title := domain.Title{
-					TrainerID: trainer.ID,
-					Value:     value,
-				}
-				if err := repo.CreateTitle(c.Context(), tx, &title); err != nil {
-					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-						"error": "Failed to create title",
-					})
-				}
-				titles = append(titles, title)
+		// Добавление видов спорта
+		if len(req.SportIDs) > 0 {
+			if err := repo.AddSportTypesToTrainer(c.Context(), tx, trainer.ID, req.SportIDs); err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"error": "Failed to add sport types to trainer",
+				})
 			}
-			response.Titles = titles
+			// Получаем добавленные виды спорта для ответа
+			sportTypes, err := repo.GetSportTypesByTrainerIDTx(c.Context(), tx, trainer.ID)
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"error": "Failed to get sport types",
+				})
+			}
+			response.SportTypes = sportTypes
 		}
 
 		// Создание контактов

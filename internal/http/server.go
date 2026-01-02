@@ -4,10 +4,12 @@ import (
 	"log/slog"
 	"strconv"
 
+	"treners_app/internal/handler/auth"
 	"treners_app/internal/handler/probe"
 	"treners_app/internal/handler/sportsman"
 	"treners_app/internal/handler/trainer"
 	"treners_app/internal/logger"
+	"treners_app/internal/middleware"
 	"treners_app/internal/repository"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,17 +32,24 @@ func NewService(repo *repository.Repository) (*Service, error) {
 func (s *Service) setupRoutes() *fiber.App {
 	app := fiber.New()
 
+	// TODO: оставлять ли публичными? надо уточнить у Дениса)
 	app.Get("/probe/readiness", probe.Readiness)
 	app.Get("/probe/liveness", probe.Liveness)
 
-	trainerGroup := app.Group("/api/trainers")
+	authGroup := app.Group("/api/auth")
+	authGroup.Post("/register", auth.Register(s.repo))
+	authGroup.Post("/login", auth.Login(s.repo))
+
+	apiGroup := app.Group("/api")
+
+	trainerGroup := apiGroup.Group("/trainers", middleware.AuthMiddleware())
 	trainerGroup.Post("/create", trainer.Create(s.repo))
 	trainerGroup.Get("/getByName", trainer.GetByName(s.repo))
 	// trainerGroup.Post("/update", trainer.UpdateTrainer(s.repo))
 	trainerGroup.Post("/delete", trainer.Delete(s.repo))
 	trainerGroup.Post("/activate", trainer.Activate(s.repo))
 
-	sportsmanGroup := app.Group("/api/sportsman")
+	sportsmanGroup := apiGroup.Group("/sportsman", middleware.AuthMiddleware())
 	sportsmanGroup.Post("/create", sportsman.Create(s.repo))
 	sportsmanGroup.Get("/getByName", sportsman.GetByName(s.repo))
 

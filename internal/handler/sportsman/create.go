@@ -7,15 +7,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type Contact struct {
+	TypeID  int64  `json:"type_id" validate:"required"`
+	Contact string `json:"contact" validate:"required"`
+}
+
 type CreateSportsmanRequest struct {
-	LastName   string `json:"last_name" validate:"required"`
-	FirstName  string `json:"first_name" validate:"required"`
-	MiddleName string `json:"middle_name"`
-	IsActive   bool   `json:"is_active,omitempty"`
+	LastName   string    `json:"last_name" validate:"required"`
+	FirstName  string    `json:"first_name" validate:"required"`
+	MiddleName string    `json:"middle_name"`
+	IsActive   bool      `json:"is_active,omitempty"`
+	Contacts   []Contact `json:"contacts" validate:"required,min=1,dive"`
 }
 
 type CreateSportsmanResponse struct {
 	Sportsman *domain.Sportsman `json:"sportsman"`
+	Contacts  []domain.Contact  `json:"contacts"`
 }
 
 func Create(repo *repository.Repository) fiber.Handler {
@@ -65,6 +72,25 @@ func Create(repo *repository.Repository) fiber.Handler {
 
 		response := &CreateSportsmanResponse{
 			Sportsman: sportsman,
+		}
+
+		// Создание контактов
+		if len(req.Contacts) > 0 {
+			contacts := make([]domain.Contact, 0, len(req.Contacts))
+			for _, contact := range req.Contacts {
+				newContact := domain.Contact{
+					SportsmanID: sportsman.ID,
+					TypeID:      contact.TypeID,
+					Contact:     contact.Contact,
+				}
+				if err = repo.CreateContact(c.Context(), tx, &newContact); err != nil {
+					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+						"error": "Failed to create contact",
+					})
+				}
+				contacts = append(contacts, newContact)
+			}
+			response.Contacts = contacts
 		}
 
 		// Подтверждение транзакции
